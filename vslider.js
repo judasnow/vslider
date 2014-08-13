@@ -340,7 +340,6 @@ Slider.prototype._renderTumbnailItemBox = function(url, index) {
 };
 //}}}
 
-
 // 在 options 中需要提供一个 bigImageMapper 方法，将 images 映射为一个大图 url
 var vslider = function($sliderBox, $images, options) {
     var slider = new Slider(

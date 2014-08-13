@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>sporting_webapp test</title>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../sportscool/static/src/style/lib/mocha.css" />
+<style>
+    #preview-box {
+
+    }
+
+    #thumbnail-box {
+        width: 960px;
+        margin: 0 auto;
+    }
+
+    #thumbnail-box .thumbnail-item-box {
+        float: left;
+        width: 64px;
+        height: 64px;
+        overflow: hidden;
+        background: #efefef;
+    }
+    #thumbnail-box .thumbnail-item {
+        max-width: 64px;
+    }
+
+    #slider-box {
+        display: inline-block;
+        display: none;
+        height: 100%;
+        min-width: 100%;
+        background: rgba(0,0,0,0.8);
+        position: fixed;
+        left: 0;
+        top: 0;
+    }
+
+    #slider-box .slider {
+        padding: 0;
+        margin: 0;
+        left: 0;
+        top: 0;
+        position: relative;
+    }
+
+    #slider-box .slider .slider-item-box {
+        float: left;
+        list-style-type: none;
+        text-align: center;
+    }
+
+    #slider-box .slider .slider-item-box img {
+        position: relative;
+        width: 100%;
+    }
+</style>
+</head>
+
+<body>
+    <div id="mocha"></div>
+
+    <div id="preview-box">
+        <div id="thumbnail-box">
+            <div id="thumbnail">
+                <div class="thumbnail-item-box">
+                    <img class="thumbnail-item" data-index="1"
+                         src="http://sc-photos.u.qiniudn.com/201407/27/934708806.jpg"/>
+                </div>
+                <div class="thumbnail-item-box">
+                    <img class="thumbnail-item" data-index="2"
+                         src="http://dn-sp1.qbox.me/u/1/1022/1387073415.jpg"/>
+                </div>
+                <div class="thumbnail-item-box">
+                    <img class="thumbnail-item" data-index="3"
+                         src="http://dn-sp1.qbox.me/u/1/1022/1387073415.jpg"/>
+                <q/div>
+            </div>
+        </div>
+        <div id="slider-box">
+            <ul class="slider"></ul>
+        </div>
+    </div>
+</body>
+
+<script data-main="main.js" src="../../sportscool/static/src/js/lib/require.js"></script>
+<script>
+define(["js/utility/vslider3"],
+function(vslider) {
+"use strict";
+
+describe("vslider", function() {
+    describe("初始化", function() {
+        it("绑定相应的事件", function() {
+            vslider($("#slider-box"), $(".thumbnail-item"));
+        });
+    });
+});
+
+});
+</script>
+</html>
+
+
+
