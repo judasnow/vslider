@@ -7,6 +7,9 @@ define([
 function(_) {
 "use struct";
 
+var getOriginUrl = function(url) {
+    return url.split("!")[0];
+};
 
 // helper {{{
 var cropPx = function(pxString) {
@@ -37,24 +40,38 @@ var initImageList = function(images, urlMapper, render, imgOnload) {
         var mapped_url = urlMapper($(item).attr("src")),
             $itemBox = $(render(mapped_url, index));
 
-        index += 1;
+        var imageOnloadHandler = function() {
+            var $image = $('<img src="' + this.src + '">');
 
-        _.defer(function() {
+            // 加载完成 插入 box
+            if (_.isFunction(imgOnload)) {
+                imgOnload($image);
+            }
+
+            $itemBox.html($image);
+        };
+
+        // 多次失败 则需要提示用户
+        var imageOnerrorHandler = function() {
+            // @TODO 缩略图加载失败 退化为原图 ?
             var image = new Image();
-            image.src = mapped_url;
+            image.src = getOriginUrl(mapped_url) + "!c180x180.jpg";
+            image.onload = imageOnloadHandler;
+        };
 
-            image.onload = function() {
-                var $image = $('<img src="' + mapped_url + '">');
+        var tryLoadImage = function() {
+             _.defer(function() {
+                var image = new Image();
+                image.src = mapped_url;
 
-                // 加载完成 插入 box
-                if (_.isFunction(imgOnload)) {
-                    imgOnload($image);
-                }
+                image.onload = imageOnloadHandler;
+                image.onerror = imageOnerrorHandler;
+            });
+        };
 
-                $itemBox.html($image);
-            };
-        });
+        tryLoadImage();
 
+        index += 1;
         return $itemBox;
     });
 
@@ -91,6 +108,7 @@ var Slider = function($sliderBox, $images, options) {
     $images.on("tap", function(event) {
         var $currentTarget = $(event.currentTarget);
 
+        //@XXX 此处也是一个对数据的假设
         that._currentImageIndex = $currentTarget.data("index");
         that._show();
     });
@@ -122,17 +140,38 @@ Slider.prototype._getScreenSize = function() {
 Slider.prototype._tuningSliderImage = function($image) {
     var image = $image.get(0);
 
+    // @TODO 这里其实需要根据图片本身的大小进行判断的
+    //       但 由于添加了 !c320x320 因此都变成了正方形的图片 （除了个别小图）
+
+    // 根据图片本身进行处理 也就是将 图片本身比较长的设置成 不大于 屏幕尺寸中比较短的
+    // 值
+    var imageWidth = image.width,
+        imageHeight = image.height;
+
     if (this._screenType === "horizontal") {
-        $image.css({
-            "max-height": this._screenHeight,
-            "min-height": this._screenHeight
-        });
+        // 横屏 width > height
+
+        if (imageWidth >= imageHeight) {
+            $image.css({
+                "max-width": this._screenHeight
+            });
+        } else {
+            $image.css({
+                "max-height": this._screenHeight
+            });
+        }
+
     } else {
 
-        $image.css({
-            "max-height": this._screenWidth,
-            "min-height": this._screenWidth
-        });
+        if (imageWidth >= imageHeight) {
+            $image.css({
+                "max-width": this._screenWidth
+            });
+        } else {
+            $image.css({
+                "max-height": this._screenWidth
+            });
+        }
 
         // 竖屏的水平居中显示
         $image.css({
@@ -180,6 +219,7 @@ Slider.prototype._render = function() {
         this._bigUrlMapper,
         this._renderTumbnailItemBox,
 
+        // onload cb
         this._tuningSliderImage.bind(this)
     );
 
@@ -336,18 +376,21 @@ Slider.prototype._calcLeft = function(imageIndex, screenWidth) {
 // 根据 url 以及序号 生成
 Slider.prototype._renderTumbnailItemBox = function(url, index) {
     return '<li class="slider-item-box" data-index="' +
-        index + '"data-url="' + url + '"></li>'
+        index + '" data-url="' + url + '"></li>'
 };
 //}}}
 
 // 在 options 中需要提供一个 bigImageMapper 方法，将 images 映射为一个大图 url
+//
+// 需要注意的是提供的 slider 需要符合一定的规范
+// #sliderBox > .slider
 var vslider = function($sliderBox, $images, options) {
     var slider = new Slider(
         $sliderBox,
         $images,
         {
             bigImageMapper: function(url) {
-                return url + "!c180x180.jpg";
+                return getOriginUrl(url) + "!c320x320.jpg";
             }
         }
     );
