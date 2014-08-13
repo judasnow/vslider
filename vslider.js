@@ -9,7 +9,7 @@ function(_) {
 
 
 // helper {{{
-var cropPx = function() {
+var cropPx = function(pxString) {
     if (pxString === "auto") {
         return 0;
     } else {
@@ -192,11 +192,37 @@ Slider.prototype._render = function() {
 };
 
 Slider.prototype._goNext = function() {
-    
+   var nowLeft = cropPx(this._$slider.css("left"));
+
+   if (this._currentImageIndex === this._imagesCount) {
+        // 已经到了最后一张
+        // 恢复到之前的位置
+        var left = this._calcLeft(this._currentImageIndex, this._screenWidth);
+        this._animateSetLeft(this._$slider, left);
+    } else {
+        // 移动到后一张
+        this._currentImageIndex = this._currentImageIndex + 1;
+        var left = this._calcLeft(this._currentImageIndex, this._screenWidth);
+        this._animateSetLeft(this._$slider, left);
+    }
 };
 
 Slider.prototype._goPrev = function() {
-    
+    // 向前滚动 如果当前的 left 值 大于0 则
+    // 证明已经是第一张图片了
+    var nowLeft = cropPx(this._$slider.css("left"));
+
+    if (this._currentImageIndex === 1) {
+        // 在第一张的情况之下 仍然尝试左滑动
+        // 则会从用户 touchend 的位置回复到 0
+        this._animateSetLeft(this._$slider, 0);
+    } else {
+        // 移动到前一张
+        this._currentImageIndex = this._currentImageIndex - 1;
+
+        var left = this._calcLeft(this._currentImageIndex, this._screenWidth);
+        this._animateSetLeft(this._$slider, left);
+    }
 };
 
 // 设置 left 的时候需要的动画
@@ -236,7 +262,7 @@ Slider.prototype._bindEvents = function() {
             toLeft = false;
             toRight = false;
             touchmoveBeginX = event.touches[0].pageX;
-            beginLeft = cropPx($slider.css("left"));
+            beginLeft = cropPx(that._$slider.css("left"));
         }
     });
 
@@ -245,7 +271,7 @@ Slider.prototype._bindEvents = function() {
             return;
         } else {
 
-            if (Math.abs(delta) <= Math.abs(screenWidth/4)) {
+            if (Math.abs(delta) <= Math.abs(this._screenWidth/4)) {
                 // 移动的距离比较小 就回复原来的位置
                 $slider.animate(
                     {left: beginLeft + "px"},
@@ -276,9 +302,9 @@ Slider.prototype._bindEvents = function() {
             delta = touchmoveX - touchmoveBeginX;
             var left = beginLeft + delta;
 
-            $slider.animate(
+            that._$slider.animate(
                 {left: left + "px"},
-                {duration: 500, easing: "ease-out"}
+                {duration: 300, easing: "ease-in-out"}
             );
         }
     });
